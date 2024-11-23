@@ -1,0 +1,16 @@
+./venv/
+./charts/*.html
+./data/
+./pycache/
+./streamlit/
+./__pycache__/
+data.json
+job.txt
+old main.py
+test*.py
+*.pyc
+*.pyo
+*.pyd
+*.pyw
+*.pyz
+tw.py
