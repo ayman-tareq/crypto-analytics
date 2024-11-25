@@ -1,8 +1,8 @@
 ./venv/
-./charts/*.html
+/charts/*.html
 ./data/
 ./pycache/
-./streamlit/
+# /.streamlit/
 ./__pycache__/
 data.json
 job.txt
