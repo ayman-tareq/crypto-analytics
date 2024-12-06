@@ -4,6 +4,7 @@ import datetime
 import plotly.graph_objs as go
 import re, os, time
 from datetime import timezone
+from tweets import get_tweets
 
 # Set page config
 st.set_page_config(
@@ -27,7 +28,8 @@ with st.sidebar:
     st.header("Input Parameters")
     
     # Token ID input
-    token_id = st.text_input("Enter the Token ID:", value="bitcoin").strip()
+    username = st.text_input("Enter the X/Twitter Handle:", value="@PancakeSwap").strip().replace('@', '').strip()
+    token_id = st.text_input("Enter the Token ID:", value="pancakeswap-token").strip()
     
     # Period selection
     period_options = {
@@ -184,3 +186,16 @@ if st.button("Download Chart"):
     placeholder.success(f"Chart saved as {filename} in the charts directory", icon="✅")
     time.sleep(3)
     placeholder.empty()
+
+with st.spinner("Fetching tweets..."):
+    tweets = get_tweets(username)
+    
+st.subheader("Recent Tweets")
+if tweets:
+    for tweet in tweets:
+        published_at = tweet.get('published_at', 'Unknown Date')
+        text = tweet.get('text', '')
+        st.markdown(f"**{published_at}**\n\n{text}")
+        st.markdown("---")  # Divider between tweets
+else:
+    st.info("No tweets available to display.")
