@@ -271,4 +271,4 @@ if run_analysis:
     else:
         st.info("No tweets available to display.")
 else:
-    st.info("Click 'test2!' to display the data.")
+    st.info("Click 'Run' to display the data.")
