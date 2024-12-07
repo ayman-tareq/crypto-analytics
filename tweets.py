@@ -1,6 +1,7 @@
 import requests
 from datetime import datetime
 import regex
+import streamlit as st
 
 headers = {
     "x-rapidapi-key": "dd82b0660fmsh5863e3f388ab998p178600jsn5e8f3d4b7f77",
@@ -32,6 +33,7 @@ def send_requests_4_tweets(username, headers, token=''):
     response = requests.get(url, headers=headers, params=querystring)
     return response.json()
 
+@st.cache_data(ttl=3600)  # Cache for 1 hour (3600 seconds)
 def get_tweets(username):
     
     tweets = []

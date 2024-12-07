@@ -5,6 +5,7 @@ import plotly.graph_objs as go
 import re, os, time
 from datetime import timezone
 from tweets import get_tweets
+from io import BytesIO
 
 # Set page config
 st.set_page_config(
@@ -51,6 +52,33 @@ with st.sidebar:
         period = f"{start_date},{end_date}"
     else:
         period = period_options[period_selection]
+    
+    # Option 1: Using markdown styling with custom CSS
+    st.markdown(
+        """
+        <style>
+        div.stButton > button:first-child {
+            background-color: #0099ff;
+            color: white;
+            padding: 0.5rem 1rem;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 0.5rem;
+            border: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+        div.stButton > button:first-child:hover {
+            background-color: #0077cc;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transform: translateY(-2px);
+        }
+        </style>
+        """, unsafe_allow_html=True
+    )
+
+    # Then use the button with a more descriptive text
+    run_analysis = st.button("🚀 Run")
 
 # Base URL for CoinGecko API
 BASE_URL = "https://api.coingecko.com/api/v3"
@@ -89,113 +117,121 @@ def fetch_tvl(token_id):
         return None
 
 # Calculate dates based on period
-if ',' in period:
-    try:
-        start_date, end_date = period.split(',')
-        start = datetime.datetime.strptime(start_date, '%Y-%m-%d')
-        end = datetime.datetime.strptime(end_date, '%Y-%m-%d')
-        days = (end - start).days
-        period_text = f"From {start.strftime('%Y-%m-%d')} to {end.strftime('%Y-%m-%d')}"
-    except ValueError:
-        st.error("Invalid date format")
-        st.stop()
-else:
-    if period == '6m':
-        days, period_text = 180, '6 Months'
-    elif period == '1y':
-        days, period_text = 365, '1 Year'
-    elif 'w' in period:
-        days = int(re.findall(r'\d+', period)[0]) * 7
-        period_text = f"{days//7} Week{'s' if days>7 else ''}"
-    elif 'mo' in period:
-        days = int(re.findall(r'\d+', period)[0]) * 30
-        period_text = f"{days//30} Month{'s' if days>30 else ''}"
-    elif 'd' in period:
-        days = int(re.findall(r'\d+', period)[0])
-        period_text = f"{days} Day{'s' if days>1 else ''}"
+if run_analysis:
+    if ',' in period:
+        try:
+            start_date, end_date = period.split(',')
+            start = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+            end = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+            days = (end - start).days
+            period_text = f"From {start.strftime('%Y-%m-%d')} to {end.strftime('%Y-%m-%d')}"
+        except ValueError:
+            st.error("Invalid date format")
+            st.stop()
+    else:
+        if period == '6m':
+            days, period_text = 180, '6 Months'
+        elif period == '1y':
+            days, period_text = 365, '1 Year'
+        elif 'w' in period:
+            days = int(re.findall(r'\d+', period)[0]) * 7
+            period_text = f"{days//7} Week{'s' if days>7 else ''}"
+        elif 'mo' in period:
+            days = int(re.findall(r'\d+', period)[0]) * 30
+            period_text = f"{days//30} Month{'s' if days>30 else ''}"
+        elif 'd' in period:
+            days = int(re.findall(r'\d+', period)[0])
+            period_text = f"{days} Day{'s' if days>1 else ''}"
 
-# Fetch data
-with st.spinner("Fetching data..."):
-    from_date = int((datetime.datetime.now(timezone.utc) - datetime.timedelta(days=days)).timestamp())
-    to_date = int(datetime.datetime.now(timezone.utc).timestamp())
+    # Fetch data
+    with st.spinner("Fetching data..."):
+        from_date = int((datetime.datetime.now(timezone.utc) - datetime.timedelta(days=days)).timestamp())
+        to_date = int(datetime.datetime.now(timezone.utc).timestamp())
 
-    price_and_market_cap = fetch_price_and_market_cap(token_id)
-    market_chart_range = fetch_market_chart_range(token_id, from_date, to_date)
-    tvl_data = fetch_tvl(token_id)
+        price_and_market_cap = fetch_price_and_market_cap(token_id)
+        market_chart_range = fetch_market_chart_range(token_id, from_date, to_date)
+        tvl_data = fetch_tvl(token_id)
 
-# Calculate FDV
-historical_fdv = []
-for point in market_chart_range.get("prices", []):
-    price = point[1]
-    timestamp = point[0]
-    total_supply = tvl_data.get("market_data", {}).get("total_supply", 0)
-    fdv = price * total_supply if total_supply else 0
-    historical_fdv.append((timestamp, fdv))
+    # Calculate FDV
+    historical_fdv = []
+    for point in market_chart_range.get("prices", []):
+        price = point[1]
+        timestamp = point[0]
+        total_supply = tvl_data.get("market_data", {}).get("total_supply", 0)
+        fdv = price * total_supply if total_supply else 0
+        historical_fdv.append((timestamp, fdv))
 
-# Display current metrics
-col1, col2, col3 = st.columns(3)
-with col1:
-    current_price = tvl_data.get("market_data", {}).get("current_price", {}).get("usd", 0)
-    st.metric("Current Price", f"${current_price:,.2f}")
-with col2:
-    market_cap = tvl_data.get("market_data", {}).get("market_cap", {}).get("usd", 0)
-    st.metric("Market Cap", f"${market_cap:,.0f}")
-with col3:
-    total_supply = tvl_data.get("market_data", {}).get("total_supply", 0)
-    st.metric("Total Supply", f"{total_supply:,.0f}")
+    # Display current metrics
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        current_price = tvl_data.get("market_data", {}).get("current_price", {}).get("usd", 0)
+        st.metric("Current Price", f"${current_price:,.2f}")
+    with col2:
+        market_cap = tvl_data.get("market_data", {}).get("market_cap", {}).get("usd", 0)
+        st.metric("Market Cap", f"${market_cap:,.0f}")
+    with col3:
+        total_supply = tvl_data.get("market_data", {}).get("total_supply", 0)
+        st.metric("Total Supply", f"{total_supply:,.0f}")
 
-# Plot data
-timestamps = [datetime.datetime.fromtimestamp(point[0] / 1000, timezone.utc) for point in historical_fdv]
-fdv_values = [point[1] for point in historical_fdv]
-market_cap_values = [point[1] for point in market_chart_range.get("market_caps", [])]
+    # Plot data
+    timestamps = [datetime.datetime.fromtimestamp(point[0] / 1000, timezone.utc) for point in historical_fdv]
+    fdv_values = [point[1] for point in historical_fdv]
+    market_cap_values = [point[1] for point in market_chart_range.get("market_caps", [])]
 
-fig = go.Figure()
+    fig = go.Figure()
 
-fig.add_trace(go.Scatter(
-    x=timestamps, 
-    y=fdv_values, 
-    mode='lines', 
-    name='FDV',
-    line=dict(color='blue')
-))
+    fig.add_trace(go.Scatter(
+        x=timestamps, 
+        y=fdv_values, 
+        mode='lines', 
+        name='FDV',
+        line=dict(color='blue')
+    ))
 
-fig.add_trace(go.Scatter(
-    x=timestamps, 
-    y=market_cap_values, 
-    mode='lines', 
-    name='Market Cap',
-    line=dict(color='red')
-))
+    fig.add_trace(go.Scatter(
+        x=timestamps, 
+        y=market_cap_values, 
+        mode='lines', 
+        name='Market Cap',
+        line=dict(color='red')
+    ))
 
-fig.update_layout(
-    title=f"FDV and Market Cap Over {period_text}",
-    xaxis_title="Time",
-    yaxis_title="Value (USD)",
-    legend=dict(x=0.05, y=0.95),
-    template="plotly_white"
-)
+    fig.update_layout(
+        title=f"FDV and Market Cap Over {period_text}",
+        xaxis_title="Time",
+        yaxis_title="Value (USD)",
+        legend=dict(x=0.05, y=0.95),
+        template="plotly_white"
+    )
 
-st.plotly_chart(fig, use_container_width=True)
+    # Display the chart
+    st.plotly_chart(fig, use_container_width=True)
 
-# Add download button for the chart
-if st.button("Download Chart"):
-    os.makedirs('./charts', exist_ok=True)
     filename = f"{token_id}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
-    fig.write_html(os.path.join('./charts', filename))
-    placeholder = st.empty()
-    placeholder.success(f"Chart saved as {filename} in the charts directory", icon="✅")
-    time.sleep(3)
-    placeholder.empty()
-
-with st.spinner("Fetching tweets..."):
-    tweets = get_tweets(username)
+    buffer = BytesIO()
+    html_str = fig.to_html()  # Generate the HTML string
+    buffer.write(html_str.encode('utf-8'))  # Encode the string as bytes and write to the buffer
+    buffer.seek(0)
     
-st.subheader("Recent Tweets")
-if tweets:
-    for tweet in tweets:
-        published_at = tweet.get('published_at', 'Unknown Date')
-        text = tweet.get('text', '')
-        st.markdown(f"**{published_at}**\n\n{text}")
-        st.markdown("---")  # Divider between tweets
+    # Streamlit button for downloading
+    st.download_button(
+        label="📥 Download Chart",
+        data=buffer,
+        file_name=filename,
+        mime="text/html"
+    )
+
+    with st.spinner("Fetching tweets..."):
+        tweets = get_tweets(username)
+        
+    st.subheader("Recent Tweets")
+    if tweets:
+        for tweet in tweets:
+            published_at = tweet.get('published_at', 'Unknown Date')
+            text = tweet.get('text', '')
+            st.markdown(f"**{published_at}**\n\n{text}")
+            st.markdown("---")  # Divider between tweets
+    else:
+        st.info("No tweets available to display.")
 else:
-    st.info("No tweets available to display.")
+    print("Click 'Run' to fetch and display the data.")
