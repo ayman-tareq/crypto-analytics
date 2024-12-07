@@ -83,7 +83,7 @@ with st.sidebar:
 # Base URL for CoinGecko API
 BASE_URL = "https://api.coingecko.com/api/v3"
 
-@st.cache_data(ttl=300)  # Cache for 1 hour
+@st.cache_data(ttl=300, show_spinner=False)  # Cache for 1 hour
 def fetch_price_and_market_cap(token_id):
     url = f"{BASE_URL}/simple/price"
     params = {
@@ -94,7 +94,7 @@ def fetch_price_and_market_cap(token_id):
     response = requests.get(url, params=params)
     return response.json()
 
-@st.cache_data(ttl=300)
+@st.cache_data(ttl=300, show_spinner=False)
 def fetch_market_chart_range(token_id, from_date, to_date):
     url = f"{BASE_URL}/coins/{token_id}/market_chart/range"
     params = {
@@ -105,7 +105,7 @@ def fetch_market_chart_range(token_id, from_date, to_date):
     response = requests.get(url, params=params)
     return response.json()
 
-@st.cache_data(ttl=300)
+@st.cache_data(ttl=300, show_spinner=False)
 def fetch_tvl(token_id):
     url = f"{BASE_URL}/coins/{token_id}"
     response = requests.get(url)
@@ -215,7 +215,7 @@ if run_analysis:
     
     # Streamlit button for downloading
     st.download_button(
-        label="📥 Download Chart",
+        label="⬇️ Download Chart",
         data=buffer,
         file_name=filename,
         mime="text/html"
@@ -224,7 +224,27 @@ if run_analysis:
     with st.spinner("Fetching tweets..."):
         tweets = get_tweets(username)
         
-    st.subheader("Recent Tweets")
+    # Create header row with download button
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        st.subheader("Recent Tweets")
+    with col2:
+            # Prepare CSV data
+            csv_data = "Published At,Tweet Text\n"
+            for tweet in tweets:
+                published_at = tweet.get('published_at', 'Unknown Date')
+                text = tweet.get('text', '').replace('"', '""')  # Escape quotes for CSV
+                csv_data += f'"{published_at}","{text}"\n'
+            
+            st.download_button(
+                label="⬇️ Download Tweets",
+                data=csv_data.encode('utf-8'),
+                file_name=f"{username}_tweets_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                mime="text/csv",
+                key='download_tweets'
+            )
+    
+    # Display tweets
     if tweets:
         for tweet in tweets:
             published_at = tweet.get('published_at', 'Unknown Date')
@@ -234,4 +254,4 @@ if run_analysis:
     else:
         st.info("No tweets available to display.")
 else:
-    print("Click 'Run' to fetch and display the data.")
+    st.info("Click 'Run' to display the data.")

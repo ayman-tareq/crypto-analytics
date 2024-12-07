@@ -8,7 +8,7 @@ headers = {
     "x-rapidapi-host": "twitter154.p.rapidapi.com"
 }
 
-TWEETS_LIMIT = 40
+TWEETS_LIMIT = 50
 
 def remove_emojis(text):
     return regex.sub(r'\p{Emoji}', '', text)
@@ -33,7 +33,7 @@ def send_requests_4_tweets(username, headers, token=''):
     response = requests.get(url, headers=headers, params=querystring)
     return response.json()
 
-@st.cache_data(ttl=3600)  # Cache for 1 hour (3600 seconds)
+@st.cache_data(ttl=3600, show_spinner=False)  # Cache for 1 hour (3600 seconds)
 def get_tweets(username):
     
     tweets = []
