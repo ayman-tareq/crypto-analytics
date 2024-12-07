@@ -95,7 +95,7 @@ def fetch_price_and_market_cap(token_id):
     if response.status_code == 200:
         return response.json()
     elif response.status_code == 429:
-        st.info(f"API Calling Limit Exceeded for Current Plan, Please Upgrade the Plan!\nhttps://www.coingecko.com/en/api/pricing")
+        st.info(f"API Calling ({url}) Limit Exceeded for Current Plan, Please Upgrade the Plan!\nhttps://www.coingecko.com/en/api/pricing")
         return {}
     else:
         st.error(f"Error fetching simple price for token {token_id}: {response.status_code}")
@@ -113,7 +113,7 @@ def fetch_market_chart_range(token_id, from_date, to_date):
     if response.status_code == 200:
         return response.json()
     elif response.status_code == 429:
-        st.info(f"API Calling Limit Exceeded for Current Plan, Please Upgrade the Plan!\nhttps://www.coingecko.com/en/api/pricing")
+        st.info(f"API Calling ({url}) Limit Exceeded for Current Plan, Please Upgrade the Plan!\nhttps://www.coingecko.com/en/api/pricing")
         return {}
     else:
         st.error(f"Error fetching market_chart for token {token_id}: {response.status_code}")
@@ -127,7 +127,7 @@ def fetch_tvl(token_id):
     if response.status_code == 200:
         return response.json()
     elif response.status_code == 429:
-        st.info(f"API Calling Limit Exceeded for Current Plan, Please Upgrade the Plan!\nhttps://www.coingecko.com/en/api/pricing")
+        st.info(f"API Calling ({url}) Limit Exceeded for Current Plan, Please Upgrade the Plan!\nhttps://www.coingecko.com/en/api/pricing")
         return {}
     else:
         st.error(f"Error fetching TVL for token {token_id}: {response.status_code}")
