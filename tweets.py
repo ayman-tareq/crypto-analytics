@@ -2,14 +2,11 @@ import requests
 from datetime import datetime
 import regex
 import streamlit as st
-import os
-from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
+rapidapi_key = st.secrets["rapidapi_key"]["RAPIDAPI_KEY"]
 
 headers = {
-    "x-rapidapi-key": os.getenv('RAPIDAPI_KEY'),
+    "x-rapidapi-key": rapidapi_key,
     "x-rapidapi-host": "twitter154.p.rapidapi.com"
 }
 

@@ -2,7 +2,6 @@
 /charts/*.html
 ./data/
 ./pycache/
-# /.streamlit/
 ./__pycache__/
 data.json
 job.txt
@@ -15,3 +14,4 @@ test*.py
 *.pyz
 tw.py
 .env
+.streamlit/
