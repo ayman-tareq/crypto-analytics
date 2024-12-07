@@ -2,9 +2,14 @@ import requests
 from datetime import datetime
 import regex
 import streamlit as st
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 headers = {
-    "x-rapidapi-key": "dd82b0660fmsh5863e3f388ab998p178600jsn5e8f3d4b7f77",
+    "x-rapidapi-key": os.getenv('RAPIDAPI_KEY'),
     "x-rapidapi-host": "twitter154.p.rapidapi.com"
 }
 

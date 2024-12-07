@@ -14,3 +14,4 @@ test*.py
 *.pyw
 *.pyz
 tw.py
+.env

@@ -30,6 +30,7 @@ Pygments==2.18.0
 pyinstaller==6.11.1
 pyinstaller-hooks-contrib==2024.10
 python-dateutil==2.9.0.post0
+python-dotenv==1.0.1
 pytz==2024.2
 pywin32-ctypes==0.2.3
 referencing==0.35.1
