@@ -14,4 +14,4 @@ test*.py
 *.pyz
 tw.py
 .env
-.streamlit/
+.streamlit/secrets.toml

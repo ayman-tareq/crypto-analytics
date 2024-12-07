@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 import datetime
 import plotly.graph_objs as go
-import re, os, time
+import re
 from datetime import timezone
 from tweets import get_tweets
 from io import BytesIO
