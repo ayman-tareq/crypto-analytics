@@ -165,7 +165,7 @@ if run_analysis:
         from_date = int((datetime.datetime.now(timezone.utc) - datetime.timedelta(days=days)).timestamp())
         to_date = int(datetime.datetime.now(timezone.utc).timestamp())
 
-        price_and_market_cap = fetch_price_and_market_cap(token_id)
+        # price_and_market_cap = fetch_price_and_market_cap(token_id)
         market_chart_range = fetch_market_chart_range(token_id, from_date, to_date)
         tvl_data = fetch_tvl(token_id)
 
