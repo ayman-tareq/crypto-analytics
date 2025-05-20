@@ -15,3 +15,6 @@ test*.py
 tw.py
 .env
 .streamlit/secrets.toml
+app-link.txt
+sample-data.json
+sample.json
