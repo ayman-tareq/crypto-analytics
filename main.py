@@ -29,8 +29,8 @@ with st.sidebar:
     st.header("Input Parameters")
     
     # Token ID input
-    username = st.text_input("Enter the X/Twitter Handle:", value="@PancakeSwap").strip().replace('@', '').strip()
-    token_id = st.text_input("Enter the Token ID:", value="pancakeswap-token").strip().lower()
+    username = st.text_input("Enter the X/Twitter Handle:", value="@Ethereum").strip().replace('@', '').strip()
+    token_id = st.text_input("Enter the Token ID:", value="Ethereum").strip().lower()
     
     # Period selection
     period_options = {
