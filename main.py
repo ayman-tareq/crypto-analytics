@@ -30,7 +30,7 @@ with st.sidebar:
     
     # Token ID input
     username = st.text_input("Enter the X/Twitter Handle:", value="@PancakeSwap").strip().replace('@', '').strip()
-    token_id = st.text_input("Enter the Token ID:", value="pancakeswap-token").strip()
+    token_id = st.text_input("Enter the Token ID:", value="pancakeswap-token").strip().lower()
     
     # Period selection
     period_options = {
@@ -133,6 +133,33 @@ def fetch_tvl(token_id):
         st.error(f"Error fetching TVL for token {token_id}: {response.status_code}")
         return {}
 
+@st.cache_data(ttl=300, show_spinner=False)
+def fetch_historical_tvl(token_id, days=30):
+    # Map common CoinGecko IDs to DefiLlama chain/protocol names
+    # mapping = {
+    #     "bitcoin": "bitcoin",
+    #     "ethereum": "ethereum",
+    #     "binancecoin": "binance",
+    #     "pancakeswap-token": "pancakeswap",
+    #     # Add more mappings as needed
+    # }
+    
+    # llama_id = mapping.get(token_id, token_id)
+    
+    # Try protocol endpoint first, then chain endpoint as fallback
+    endpoints = [
+        f"https://api.llama.fi/v2/historicalProtocolTvl/{token_id}",
+        f"https://api.llama.fi/v2/historicalChainTvl/{token_id}"
+    ]
+    
+    for url in endpoints:
+        response = requests.get(url)
+        if response.status_code == 200 and response.json():
+            return response.json()
+    
+    # If both fail, return empty list
+    return []
+
 # Calculate dates based on period
 if run_analysis:
     if ',' in period:
@@ -168,6 +195,7 @@ if run_analysis:
         # price_and_market_cap = fetch_price_and_market_cap(token_id)
         market_chart_range = fetch_market_chart_range(token_id, from_date, to_date)
         tvl_data = fetch_tvl(token_id)
+        historical_tvl = fetch_historical_tvl(token_id, days)
 
     # Calculate FDV
     historical_fdv = []
@@ -178,8 +206,27 @@ if run_analysis:
         fdv = price * total_supply if total_supply else 0
         historical_fdv.append((timestamp, fdv))
 
+    # Plot data
+    timestamps = [datetime.datetime.fromtimestamp(point[0] / 1000, timezone.utc) for point in historical_fdv]
+    fdv_values = [point[1] for point in historical_fdv]
+    market_cap_values = [point[1] for point in market_chart_range.get("market_caps", [])]
+    
+    # Process TVL data
+    tvl_timestamps = []
+    tvl_values = []
+    if timestamps:  # Only process TVL data if we have timestamps from price data
+        for entry in historical_tvl:
+            if isinstance(entry, dict):
+                tvl_date = datetime.datetime.fromtimestamp(entry.get('date'), timezone.utc)
+                if tvl_date >= timestamps[0] and tvl_date <= timestamps[-1]:
+                    tvl_timestamps.append(tvl_date)
+                    tvl_values.append(entry.get('tvl', 0))
+            else:
+                # Skip non-dictionary entries
+                continue
+
     # Display current metrics
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
     with col1:
         current_price = tvl_data.get("market_data", {}).get("current_price", {}).get("usd", 0)
         st.metric("Current Price", f"${current_price:,.2f}")
@@ -189,11 +236,9 @@ if run_analysis:
     with col3:
         total_supply = tvl_data.get("market_data", {}).get("total_supply", 0)
         st.metric("Total Supply", f"{total_supply:,.0f}")
-
-    # Plot data
-    timestamps = [datetime.datetime.fromtimestamp(point[0] / 1000, timezone.utc) for point in historical_fdv]
-    fdv_values = [point[1] for point in historical_fdv]
-    market_cap_values = [point[1] for point in market_chart_range.get("market_caps", [])]
+    with col4:
+        current_tvl = tvl_values[-1] if tvl_values else 0
+        st.metric("TVL", f"${current_tvl:,.0f}")
 
     fig = go.Figure()
 
@@ -212,9 +257,18 @@ if run_analysis:
         name='Market Cap',
         line=dict(color='red')
     ))
+    
+    if tvl_timestamps and tvl_values:
+        fig.add_trace(go.Scatter(
+            x=tvl_timestamps, 
+            y=tvl_values, 
+            mode='lines', 
+            name='TVL',
+            line=dict(color='green')
+        ))
 
     fig.update_layout(
-        title=f"FDV and Market Cap Over {period_text}",
+        title=f"FDV, Market Cap, and TVL Over {period_text}",
         xaxis_title="Time",
         yaxis_title="Value (USD)",
         legend=dict(x=0.05, y=0.95),
