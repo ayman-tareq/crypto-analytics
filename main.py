@@ -73,6 +73,9 @@ with st.sidebar:
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
             transform: translateY(-2px);
         }
+        .no-underline {
+            text-decoration: none;
+        }
         </style>
         """, unsafe_allow_html=True
     )
@@ -320,9 +323,11 @@ if run_analysis:
         for tweet in tweets:
             published_at = tweet.get('published_at', 'Unknown Date')
             text = tweet.get('text', '')
-            st.markdown(f"**{published_at}**\n\n{text}")
+            st.markdown(f"**{published_at}** | [Tweet]({tweet.get('tweet_url', '')})\n\n{text}")
             st.markdown("---")  # Divider between tweets
     else:
         st.info("No tweets available to display.")
 else:
     st.info("Click 'Run' to display the data.")
+
+# streamlit run main.py

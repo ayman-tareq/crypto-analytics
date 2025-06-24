@@ -1,3 +1,4 @@
+import json
 import requests
 from datetime import datetime
 import regex
@@ -49,14 +50,17 @@ def get_tweets(username):
         for item in items:
             # break
             # text = remove_emojis(item['text'])
-            text = item['text']
+            tweet_id = item['tweet_id']
+            tweet_url = f"https://x.com/{username}/status/{tweet_id}"
+            text = item['text']         # tweets text are truncated, for full text fetch tweets details, but for this needs to upgrade to pro plan
 
             timestamp = item['timestamp']
             human_readable_date = datetime.fromtimestamp(timestamp).strftime('%d %B %Y, %H:%M:%S')
             
             tweets.append({
                 'published_at': human_readable_date,
-                'text': text
+                'text': text,
+                'tweet_url': tweet_url
             })
         if is_enough_search(token, tweets):
             return tweets
@@ -65,3 +69,4 @@ def get_tweets(username):
 if __name__ == '__main__':
     username = 'ayman_tareq97'
     tweets = get_tweets(username)
+    print(json.dumps(tweets, indent=4))
